@@ -93,9 +93,20 @@ class _FocusHomePageState extends State<FocusHomePage> {
     }
   }
 
+  bool get _isActive =>
+      _phase == TimerPhase.running || _phase == TimerPhase.paused;
+
   void _startSession(int minutes, {bool isBreak = false}) {
+    final addSeconds = minutes * 60;
+    if (_isActive) {
+      setState(() {
+        _totalDuration += addSeconds;
+        _remaining += addSeconds;
+      });
+      return;
+    }
     setState(() {
-      _totalDuration = minutes * 60;
+      _totalDuration = addSeconds;
       _remaining = _totalDuration;
       _isBreak = isBreak;
       _phase = TimerPhase.running;
@@ -301,11 +312,13 @@ class _FocusHomePageState extends State<FocusHomePage> {
                 ),
                 const SizedBox(width: 12),
                 ElevatedButton.icon(
-                  onPressed: () {
-                    final mins =
-                        int.tryParse(_breakController.text) ?? 5;
-                    _startSession(mins, isBreak: true);
-                  },
+                  onPressed: _isActive
+                      ? null
+                      : () {
+                          final mins =
+                              int.tryParse(_breakController.text) ?? 5;
+                          _startSession(mins, isBreak: true);
+                        },
                   icon: const Icon(Icons.coffee),
                   label: const Text('Start Break'),
                 ),
