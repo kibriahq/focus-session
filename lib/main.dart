@@ -1,5 +1,8 @@
+import 'dart:math';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:audioplayers/audioplayers.dart';
 
 void main() {
   runApp(const FocusSessionApp());
@@ -41,6 +44,64 @@ class _FocusHomePageState extends State<FocusHomePage> {
       TextEditingController(text: '5');
   int _totalFocusSecondsToday = 0;
   int _secondsLeftInDay = _computeSecondsLeftInDay();
+  final AudioPlayer _audioPlayer = AudioPlayer();
+
+  Future<void> _playCompletionSound() async {
+    try {
+      final bytes = _buildChimeWav();
+      await _audioPlayer.play(
+        BytesSource(bytes),
+        volume: 0.7,
+      );
+    } catch (_) {
+      // Ignore playback errors.
+    }
+  }
+
+  static Uint8List _buildChimeWav() {
+    const sampleRate = 44100;
+    const durationSec = 1;
+    const numSamples = sampleRate * durationSec;
+    const numChannels = 1;
+    const bytesPerSample = 2;
+    final dataSize = numSamples * numChannels * bytesPerSample;
+    final buffer = ByteData(44 + dataSize);
+
+    final riff = Uint8List.fromList('RIFF'.codeUnits);
+    final wave = Uint8List.fromList('WAVE'.codeUnits);
+    final fmt = Uint8List.fromList('fmt '.codeUnits);
+    final data = Uint8List.fromList('data'.codeUnits);
+    buffer.buffer.asUint8List(0, 4).setAll(0, riff);
+    buffer.setUint32(4, 36 + dataSize, Endian.little);
+    buffer.buffer.asUint8List(8, 4).setAll(0, wave);
+    buffer.buffer.asUint8List(12, 4).setAll(0, fmt);
+    buffer.setUint32(16, 16, Endian.little);
+    buffer.setUint16(20, 1, Endian.little);
+    buffer.setUint16(22, numChannels, Endian.little);
+    buffer.setUint32(24, sampleRate, Endian.little);
+    buffer.setUint32(28, sampleRate * numChannels * bytesPerSample,
+        Endian.little);
+    buffer.setUint16(32, numChannels * bytesPerSample, Endian.little);
+    buffer.setUint16(34, 16, Endian.little);
+    buffer.buffer.asUint8List(36, 4).setAll(0, data);
+    buffer.setUint32(40, dataSize, Endian.little);
+
+    final notes = [523.25, 659.25, 783.99, 1046.50];
+    final samplesPerNote = numSamples ~/ notes.length;
+    var offset = 44;
+    for (var n = 0; n < notes.length; n++) {
+      final freq = notes[n];
+      for (var i = 0; i < samplesPerNote; i++) {
+        final t = i / sampleRate;
+        final env = 1 - (i / samplesPerNote);
+        final sample =
+            (32767 * 0.6 * env * sin(2 * pi * freq * t)).toInt();
+        buffer.setInt16(offset, sample, Endian.little);
+        offset += bytesPerSample;
+      }
+    }
+    return buffer.buffer.asUint8List();
+  }
 
   @override
   void initState() {
@@ -64,6 +125,7 @@ class _FocusHomePageState extends State<FocusHomePage> {
   @override
   void dispose() {
     _breakController.dispose();
+    _audioPlayer.dispose();
     super.dispose();
   }
 
@@ -163,6 +225,7 @@ class _FocusHomePageState extends State<FocusHomePage> {
       _remaining = 0;
       _isBreak = false;
     });
+    _playCompletionSound();
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
