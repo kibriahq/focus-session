@@ -40,11 +40,25 @@ class _FocusHomePageState extends State<FocusHomePage> {
   final TextEditingController _breakController =
       TextEditingController(text: '5');
   int _totalFocusSecondsToday = 0;
+  int _secondsLeftInDay = _computeSecondsLeftInDay();
 
   @override
   void initState() {
     super.initState();
     _loadFocusTime();
+    Future.delayed(Duration.zero, _updateTimeLeftInDay);
+  }
+
+  static int _computeSecondsLeftInDay() {
+    final now = DateTime.now();
+    final endOfDay = DateTime(now.year, now.month, now.day, 23, 59, 59);
+    return endOfDay.difference(now).inSeconds;
+  }
+
+  void _updateTimeLeftInDay() {
+    if (!mounted) return;
+    setState(() => _secondsLeftInDay = _computeSecondsLeftInDay());
+    Future.delayed(const Duration(seconds: 1), _updateTimeLeftInDay);
   }
 
   @override
@@ -171,12 +185,6 @@ class _FocusHomePageState extends State<FocusHomePage> {
     }
     return '${m.toString().padLeft(2, '0')}:'
         '${s.toString().padLeft(2, '0')}';
-  }
-
-  int get _secondsLeftInDay {
-    final now = DateTime.now();
-    final endOfDay = DateTime(now.year, now.month, now.day, 23, 59, 59);
-    return endOfDay.difference(now).inSeconds;
   }
 
   Widget _buildTimerCircle() {
