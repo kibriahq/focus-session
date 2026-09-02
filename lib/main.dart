@@ -326,7 +326,7 @@ class _FocusHomePageState extends State<FocusHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        toolbarHeight: 185,
+        toolbarHeight: 150,
         backgroundColor: Colors.blueGrey[50],
         flexibleSpace: SafeArea(
           child: Padding(
@@ -334,7 +334,7 @@ class _FocusHomePageState extends State<FocusHomePage> {
             child: Align(
               alignment: Alignment.topLeft,
               child: Padding(
-                padding: const EdgeInsets.only(top: 20),
+                padding: const EdgeInsets.only(top: 10),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
