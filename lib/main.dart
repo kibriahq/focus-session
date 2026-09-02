@@ -40,8 +40,9 @@ class _FocusHomePageState extends State<FocusHomePage> {
   int _totalDuration = 0;
   int _remaining = 0;
   bool _isBreak = false;
-  final TextEditingController _breakController =
-      TextEditingController(text: '5');
+  final TextEditingController _breakController = TextEditingController(
+    text: '5',
+  );
   int _totalFocusSecondsToday = 0;
   int _secondsLeftInDay = _computeSecondsLeftInDay();
   final AudioPlayer _audioPlayer = AudioPlayer();
@@ -49,10 +50,7 @@ class _FocusHomePageState extends State<FocusHomePage> {
   Future<void> _playCompletionSound() async {
     try {
       final bytes = _buildChimeWav();
-      await _audioPlayer.play(
-        BytesSource(bytes),
-        volume: 0.7,
-      );
+      await _audioPlayer.play(BytesSource(bytes), volume: 0.7);
     } catch (_) {
       // Ignore playback errors.
     }
@@ -79,8 +77,11 @@ class _FocusHomePageState extends State<FocusHomePage> {
     buffer.setUint16(20, 1, Endian.little);
     buffer.setUint16(22, numChannels, Endian.little);
     buffer.setUint32(24, sampleRate, Endian.little);
-    buffer.setUint32(28, sampleRate * numChannels * bytesPerSample,
-        Endian.little);
+    buffer.setUint32(
+      28,
+      sampleRate * numChannels * bytesPerSample,
+      Endian.little,
+    );
     buffer.setUint16(32, numChannels * bytesPerSample, Endian.little);
     buffer.setUint16(34, 16, Endian.little);
     buffer.buffer.asUint8List(36, 4).setAll(0, data);
@@ -94,8 +95,7 @@ class _FocusHomePageState extends State<FocusHomePage> {
       for (var i = 0; i < samplesPerNote; i++) {
         final t = i / sampleRate;
         final env = 1 - (i / samplesPerNote);
-        final sample =
-            (32767 * 0.6 * env * sin(2 * pi * freq * t)).toInt();
+        final sample = (32767 * 0.6 * env * sin(2 * pi * freq * t)).toInt();
         buffer.setInt16(offset, sample, Endian.little);
         offset += bytesPerSample;
       }
@@ -147,8 +147,7 @@ class _FocusHomePageState extends State<FocusHomePage> {
       await prefs.setInt(_storageKey, 0);
       setState(() => _totalFocusSecondsToday = 0);
     } else {
-      setState(() =>
-          _totalFocusSecondsToday = prefs.getInt(_storageKey) ?? 0);
+      setState(() => _totalFocusSecondsToday = prefs.getInt(_storageKey) ?? 0);
     }
   }
 
@@ -202,8 +201,8 @@ class _FocusHomePageState extends State<FocusHomePage> {
   void _stop() {
     final completedElapsed =
         _phase == TimerPhase.running || _phase == TimerPhase.paused
-            ? _elapsed
-            : 0;
+        ? _elapsed
+        : 0;
     if (!_isBreak && completedElapsed > 0) {
       _addFocusSeconds(completedElapsed);
     }
@@ -229,9 +228,7 @@ class _FocusHomePageState extends State<FocusHomePage> {
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            _isBreak ? 'Break finished!' : 'Session completed!',
-          ),
+          content: Text(_isBreak ? 'Break finished!' : 'Session completed!'),
         ),
       );
     }
@@ -274,10 +271,7 @@ class _FocusHomePageState extends State<FocusHomePage> {
           children: [
             Text(
               isActive ? _formatTime(_remaining) : '00:00',
-              style: const TextStyle(
-                fontSize: 40,
-                fontWeight: FontWeight.bold,
-              ),
+              style: const TextStyle(fontSize: 40, fontWeight: FontWeight.bold),
             ),
             if (isActive)
               Text(
@@ -332,8 +326,38 @@ class _FocusHomePageState extends State<FocusHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Focus Session'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        toolbarHeight: 185,
+        backgroundColor: Colors.blueGrey[50],
+        flexibleSpace: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Align(
+              alignment: Alignment.topLeft,
+              child: Padding(
+                padding: const EdgeInsets.only(top: 20),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Focus Session',
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.blueGrey,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Stay focused and track your time',
+                      style: TextStyle(fontSize: 16, color: Colors.blueGrey),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
@@ -386,8 +410,7 @@ class _FocusHomePageState extends State<FocusHomePage> {
                   onPressed: _isActive
                       ? null
                       : () {
-                          final mins =
-                              int.tryParse(_breakController.text) ?? 5;
+                          final mins = int.tryParse(_breakController.text) ?? 5;
                           _startSession(mins, isBreak: true);
                         },
                   icon: const Icon(Icons.coffee),
@@ -457,9 +480,9 @@ Widget _statCard(
           Text(
             label,
             textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  color: Colors.grey.shade700,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleSmall?.copyWith(color: Colors.grey.shade700),
           ),
           const SizedBox(height: 6),
           Text(
