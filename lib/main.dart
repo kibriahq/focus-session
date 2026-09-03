@@ -272,8 +272,7 @@ class _FocusHomePageState extends State<FocusHomePage>
   void _stop() {
     _runId++;
     int actualRunSeconds = _accumulatedRunSeconds;
-    if (_phase == TimerPhase.running &&
-        _runStartTime != null) {
+    if (_phase == TimerPhase.running && _runStartTime != null) {
       final ran = DateTime.now().difference(_runStartTime!).inSeconds;
       if (ran > 0) actualRunSeconds += ran;
     }
@@ -299,12 +298,14 @@ class _FocusHomePageState extends State<FocusHomePage>
     if (_completing) return;
     _completing = true;
     _runId++;
-    final totalRun = _accumulatedRunSeconds +
+    final totalRun =
+        _accumulatedRunSeconds +
         (_phase == TimerPhase.running && _runStartTime != null
             ? DateTime.now().difference(_runStartTime!).inSeconds
             : 0);
-    final focusToAdd =
-        totalRun >= _totalDuration ? _totalDuration : totalRun + 1;
+    final focusToAdd = totalRun >= _totalDuration
+        ? _totalDuration
+        : totalRun + 1;
     if (!_isBreak && focusToAdd > 0) {
       _addFocusSeconds(focusToAdd);
     }
@@ -379,7 +380,7 @@ class _FocusHomePageState extends State<FocusHomePage>
             backgroundColor: Colors.grey.shade300,
             strokeCap: StrokeCap.round,
             valueColor: AlwaysStoppedAnimation<Color>(
-              _isBreak ? Colors.green : Colors.blueAccent,
+              _isBreak ? Colors.green : Colors.blueGrey,
             ),
           ),
         ),
@@ -388,7 +389,11 @@ class _FocusHomePageState extends State<FocusHomePage>
           children: [
             Text(
               isActive ? _formatTime(_remaining) : '00:00',
-              style: const TextStyle(fontSize: 40, fontWeight: FontWeight.bold),
+              style: const TextStyle(
+                fontSize: 40,
+                fontWeight: FontWeight.bold,
+                color: Colors.blueGrey,
+              ),
             ),
             if (isActive)
               Text(
@@ -454,7 +459,7 @@ class _FocusHomePageState extends State<FocusHomePage>
             child: Icon(Icons.timer_outlined, color: color[500], size: 18),
           ),
           const SizedBox(width: 8),
-          Text(label),
+          Text(label, style: const TextStyle(color: Colors.blueGrey)),
         ],
       ),
     );
@@ -519,11 +524,15 @@ class _FocusHomePageState extends State<FocusHomePage>
                       const SizedBox(height: 16),
                       _buildTimerControls(),
                       const SizedBox(height: 24),
-                      const Text(
-                        'Start A Session',
-                        style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
+                      Align(
+                        alignment: Alignment.center,
+                        child: const Text(
+                          'Start A Session',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.blueGrey,
+                          ),
                         ),
                       ),
                       const SizedBox(height: 12),
@@ -583,11 +592,15 @@ class _FocusHomePageState extends State<FocusHomePage>
                         ],
                       ),
                       const SizedBox(height: 28),
-                      const Text(
-                        'Take A Break',
-                        style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
+                      Align(
+                        alignment: Alignment.center,
+                        child: const Text(
+                          'Take A Break',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.blueGrey,
+                          ),
                         ),
                       ),
                       const SizedBox(height: 12),
@@ -641,9 +654,7 @@ class _FocusHomePageState extends State<FocusHomePage>
                             ),
                             label: Text(
                               'Start Break',
-                              style: TextStyle(
-                                color: Colors.green[700]
-                              ),
+                              style: TextStyle(color: Colors.green[700]),
                             ),
                           ),
                         ],
