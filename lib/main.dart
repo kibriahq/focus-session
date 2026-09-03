@@ -344,7 +344,7 @@ class _FocusHomePageState extends State<FocusHomePage> {
           children: [
             // Header
             Container(
-              height: 200,
+              height: 230,
               width: double.infinity,
               color: Colors.blueGrey[50],
               padding: const EdgeInsets.only(top: 20, left: 16, right: 16),
@@ -372,11 +372,12 @@ class _FocusHomePageState extends State<FocusHomePage> {
 
             // Body
             Positioned(
-              top: 150, // 200 - 50
+              top: 155,
               left: 0,
               right: 0,
               bottom: 0,
               child: Container(
+                margin: EdgeInsets.only(right: 10, left: 10),
                 decoration: const BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
