@@ -303,7 +303,8 @@ class _FocusHomePageState extends State<FocusHomePage>
         (_phase == TimerPhase.running && _runStartTime != null
             ? DateTime.now().difference(_runStartTime!).inSeconds
             : 0);
-    final focusToAdd = totalRun > _totalDuration ? _totalDuration : totalRun;
+    final focusToAdd =
+        totalRun >= _totalDuration ? _totalDuration : totalRun + 1;
     if (!_isBreak && focusToAdd > 0) {
       _addFocusSeconds(focusToAdd);
     }
