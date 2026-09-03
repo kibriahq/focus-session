@@ -41,7 +41,8 @@ class FocusHomePage extends StatefulWidget {
   State<FocusHomePage> createState() => _FocusHomePageState();
 }
 
-class _FocusHomePageState extends State<FocusHomePage> {
+class _FocusHomePageState extends State<FocusHomePage>
+    with WidgetsBindingObserver {
   static const String _storageKey = 'focus_total_seconds';
   static const String _dateKey = 'focus_date';
 
@@ -55,6 +56,12 @@ class _FocusHomePageState extends State<FocusHomePage> {
   int _totalFocusSecondsToday = 0;
   int _secondsLeftInDay = _computeSecondsLeftInDay();
   final AudioPlayer _audioPlayer = AudioPlayer();
+
+  DateTime? _endTime;
+  int _runId = 0;
+  int _accumulatedRunSeconds = 0;
+  DateTime? _runStartTime;
+  bool _completing = false;
 
   Future<void> _playCompletionSound() async {
     try {
@@ -115,6 +122,7 @@ class _FocusHomePageState extends State<FocusHomePage> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _loadFocusTime();
     Future.delayed(Duration.zero, _updateTimeLeftInDay);
   }
@@ -133,12 +141,18 @@ class _FocusHomePageState extends State<FocusHomePage> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _breakController.dispose();
     _audioPlayer.dispose();
     super.dispose();
   }
 
-  int get _elapsed => _totalDuration - _remaining;
+  int get _elapsed {
+    if (_totalDuration == 0) return 0;
+    final remaining = _remaining < 0 ? 0 : _remaining;
+    final elapsed = _totalDuration - remaining;
+    return elapsed < 0 ? 0 : elapsed;
+  }
 
   double get _progress {
     if (_totalDuration == 0) return 0;
@@ -167,14 +181,29 @@ class _FocusHomePageState extends State<FocusHomePage> {
     setState(() {});
   }
 
-  void _tick() {
+  void _scheduleRefresh(int runId) {
+    Future.delayed(const Duration(seconds: 1), () {
+      if (!mounted || runId != _runId) return;
+      _refresh(runId);
+    });
+  }
+
+  void _refresh(int runId) {
+    if (!mounted || runId != _runId) return;
     if (_phase != TimerPhase.running) return;
-    if (_remaining > 0) {
-      setState(() => _remaining--);
-      Future.delayed(const Duration(seconds: 1), _tick);
-    } else {
+    if (_endTime == null) return;
+
+    final now = DateTime.now();
+    final diff = _endTime!.difference(now).inSeconds;
+
+    if (diff <= 0) {
+      setState(() => _remaining = 0);
       _completeSession();
+      return;
     }
+
+    setState(() => _remaining = diff);
+    _scheduleRefresh(runId);
   }
 
   bool get _isActive =>
@@ -186,52 +215,106 @@ class _FocusHomePageState extends State<FocusHomePage> {
       setState(() {
         _totalDuration += addSeconds;
         _remaining += addSeconds;
+        if (_phase == TimerPhase.running && _endTime != null) {
+          _endTime = _endTime!.add(Duration(seconds: addSeconds));
+        }
       });
       return;
     }
+    _runId++;
+    final runId = _runId;
     setState(() {
       _totalDuration = addSeconds;
       _remaining = _totalDuration;
       _isBreak = isBreak;
       _phase = TimerPhase.running;
+      _accumulatedRunSeconds = 0;
+      _runStartTime = DateTime.now();
+      _endTime = _runStartTime!.add(Duration(seconds: addSeconds));
+      _completing = false;
     });
-    _tick();
+    _scheduleRefresh(runId);
   }
 
   void _pause() {
-    setState(() => _phase = TimerPhase.paused);
+    if (_phase != TimerPhase.running) return;
+    _runId++;
+    final remaining = _computeRemainingNow();
+    setState(() {
+      _phase = TimerPhase.paused;
+      _remaining = remaining < 0 ? 0 : remaining;
+      _endTime = null;
+      if (_runStartTime != null) {
+        final ran = DateTime.now().difference(_runStartTime!).inSeconds;
+        if (ran > 0) {
+          _accumulatedRunSeconds += ran;
+          if (_accumulatedRunSeconds > _totalDuration) {
+            _accumulatedRunSeconds = _totalDuration;
+          }
+        }
+        _runStartTime = null;
+      }
+    });
   }
 
   void _resume() {
-    setState(() => _phase = TimerPhase.running);
-    _tick();
+    if (_phase != TimerPhase.paused) return;
+    _runId++;
+    final runId = _runId;
+    setState(() {
+      _phase = TimerPhase.running;
+      _runStartTime = DateTime.now();
+      _endTime = _runStartTime!.add(Duration(seconds: _remaining));
+    });
+    _scheduleRefresh(runId);
   }
 
   void _stop() {
-    final completedElapsed =
-        _phase == TimerPhase.running || _phase == TimerPhase.paused
-        ? _elapsed
-        : 0;
-    if (!_isBreak && completedElapsed > 0) {
-      _addFocusSeconds(completedElapsed);
+    _runId++;
+    int actualRunSeconds = _accumulatedRunSeconds;
+    if (_phase == TimerPhase.running &&
+        _runStartTime != null) {
+      final ran = DateTime.now().difference(_runStartTime!).inSeconds;
+      if (ran > 0) actualRunSeconds += ran;
+    }
+    if (actualRunSeconds < 0) actualRunSeconds = 0;
+    if (actualRunSeconds > _totalDuration) {
+      actualRunSeconds = _totalDuration;
+    }
+    if (!_isBreak && actualRunSeconds > 0) {
+      _addFocusSeconds(actualRunSeconds);
     }
     setState(() {
       _phase = TimerPhase.idle;
       _totalDuration = 0;
       _remaining = 0;
       _isBreak = false;
+      _endTime = null;
+      _accumulatedRunSeconds = 0;
+      _runStartTime = null;
     });
   }
 
   void _completeSession() {
-    if (!_isBreak) {
-      _addFocusSeconds(_totalDuration);
+    if (_completing) return;
+    _completing = true;
+    _runId++;
+    final totalRun = _accumulatedRunSeconds +
+        (_phase == TimerPhase.running && _runStartTime != null
+            ? DateTime.now().difference(_runStartTime!).inSeconds
+            : 0);
+    final focusToAdd = totalRun > _totalDuration ? _totalDuration : totalRun;
+    if (!_isBreak && focusToAdd > 0) {
+      _addFocusSeconds(focusToAdd);
     }
     setState(() {
       _phase = TimerPhase.idle;
       _totalDuration = 0;
       _remaining = 0;
       _isBreak = false;
+      _endTime = null;
+      _accumulatedRunSeconds = 0;
+      _runStartTime = null;
     });
     _playCompletionSound();
     if (mounted) {
@@ -240,6 +323,30 @@ class _FocusHomePageState extends State<FocusHomePage> {
           content: Text(_isBreak ? 'Break finished!' : 'Session completed!'),
         ),
       );
+    }
+  }
+
+  int _computeRemainingNow() {
+    if (_endTime == null) return _remaining;
+    final diff = _endTime!.difference(DateTime.now()).inSeconds;
+    return diff < 0 ? 0 : diff;
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (!mounted) return;
+    if (_phase == TimerPhase.running) {
+      final now = DateTime.now();
+      if (_endTime != null) {
+        final diff = _endTime!.difference(now).inSeconds;
+        if (diff <= 0) {
+          setState(() => _remaining = 0);
+          _completeSession();
+          return;
+        }
+        setState(() => _remaining = diff);
+        _scheduleRefresh(_runId);
+      }
     }
   }
 
