@@ -50,9 +50,7 @@ class _FocusHomePageState extends State<FocusHomePage>
   int _totalDuration = 0;
   int _remaining = 0;
   bool _isBreak = false;
-  final TextEditingController _breakController = TextEditingController(
-    text: '5',
-  );
+  int _breakMinutes = 5;
   int _totalFocusSecondsToday = 0;
   int _secondsLeftInDay = _computeSecondsLeftInDay();
   final AudioPlayer _audioPlayer = AudioPlayer();
@@ -142,7 +140,6 @@ class _FocusHomePageState extends State<FocusHomePage>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    _breakController.dispose();
     _audioPlayer.dispose();
     super.dispose();
   }
@@ -607,17 +604,6 @@ class _FocusHomePageState extends State<FocusHomePage>
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          // SizedBox(
-                          //   width: 100,
-                          //   child: TextField(
-                          //     controller: _breakController,
-                          //     keyboardType: TextInputType.number,
-                          //     decoration: const InputDecoration(
-                          //       labelText: 'Minutes',
-                          //       border: OutlineInputBorder(),
-                          //     ),
-                          //   ),
-                          // ),
                           Container(
                             padding: const EdgeInsets.symmetric(vertical: 5),
                             decoration: BoxDecoration(
@@ -638,7 +624,13 @@ class _FocusHomePageState extends State<FocusHomePage>
                               children: [
                                 const SizedBox(width: 5),
                                 IconButton(
-                                  onPressed: () {},
+                                  onPressed: () {
+                                    if (_breakMinutes > 1) {
+                                      setState(() {
+                                        _breakMinutes--;
+                                      });
+                                    }
+                                  },
                                   icon: const Icon(Icons.remove),
                                   style: IconButton.styleFrom(
                                     foregroundColor: Colors.blueGrey[400],
@@ -648,18 +640,24 @@ class _FocusHomePageState extends State<FocusHomePage>
                                     ),
                                   ),
                                 ),
-                                const SizedBox(width: 15),
-                                const Text(
-                                  '5',
+                                const SizedBox(width: 14),
+                                Text(
+                                  '$_breakMinutes',
                                   style: TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,
                                     color: Colors.blueGrey,
                                   ),
                                 ),
-                                const SizedBox(width: 15),
+                                const SizedBox(width: 14),
                                 IconButton(
-                                  onPressed: () {},
+                                  onPressed: () {
+                                    if (_breakMinutes < 99) {
+                                      setState(() {
+                                        _breakMinutes++;
+                                      });
+                                    }
+                                  },
                                   icon: const Icon(Icons.add),
                                   style: IconButton.styleFrom(
                                     foregroundColor: Colors.blueGrey[400],
@@ -674,16 +672,17 @@ class _FocusHomePageState extends State<FocusHomePage>
                             ),
                           ),
                           const SizedBox(width: 12),
-                          Container(width: 1, height: 70, color: Colors.blueGrey[50]),
+                          Container(
+                            width: 1,
+                            height: 70,
+                            color: Colors.blueGrey[50],
+                          ),
                           const SizedBox(width: 12),
                           ElevatedButton.icon(
                             onPressed: _isActive
                                 ? null
                                 : () {
-                                    final mins =
-                                        int.tryParse(_breakController.text) ??
-                                        5;
-                                    _startSession(mins, isBreak: true);
+                                    _startSession(_breakMinutes, isBreak: true);
                                   },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.white,
