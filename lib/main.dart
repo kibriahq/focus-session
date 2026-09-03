@@ -324,10 +324,31 @@ class _FocusHomePageState extends State<FocusHomePage> {
     );
   }
 
-  Widget _sessionButton(String label, int minutes) {
+  Widget _sessionButton(String label, int minutes, MaterialColor color) {
     return ElevatedButton(
       onPressed: () => _startSession(minutes),
-      child: Text(label),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black87,
+        elevation: 2,
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: color[50],
+              borderRadius: BorderRadius.circular(40),
+            ),
+            child: Icon(Icons.timer_outlined, color: color[500], size: 18),
+          ),
+          const SizedBox(width: 8),
+          Text(label),
+        ],
+      ),
     );
   }
 
@@ -338,7 +359,6 @@ class _FocusHomePageState extends State<FocusHomePage> {
       //   toolbarHeight: 0,
       //   backgroundColor: Colors.blueGrey[50],
       // ),
-
       body: SizedBox.expand(
         child: Stack(
           children: [
@@ -399,16 +419,59 @@ class _FocusHomePageState extends State<FocusHomePage> {
                         ),
                       ),
                       const SizedBox(height: 12),
-                      Wrap(
-                        spacing: 12,
-                        runSpacing: 12,
-                        alignment: WrapAlignment.center,
+                      Column(
                         children: [
-                          _sessionButton('5 Min', 5),
-                          _sessionButton('15 Min', 15),
-                          _sessionButton('30 Min', 30),
-                          _sessionButton('1 Hour', 60),
-                          _sessionButton('2 Hours', 120),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _sessionButton('5 Min', 5, Colors.red),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: _sessionButton(
+                                  '15 Min',
+                                  15,
+                                  Colors.orange,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: _sessionButton(
+                                  '30 Min',
+                                  30,
+                                  Colors.blue,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _sessionButton(
+                                  '1 Hour',
+                                  60,
+                                  Colors.green,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: _sessionButton(
+                                  '2 Hrs',
+                                  120,
+                                  Colors.purple,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: _sessionButton(
+                                  '3 Hrs',
+                                  180,
+                                  Colors.pink,
+                                ),
+                              ),
+                            ],
+                          ),
                         ],
                       ),
                       const SizedBox(height: 28),
