@@ -607,17 +607,74 @@ class _FocusHomePageState extends State<FocusHomePage>
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          SizedBox(
-                            width: 100,
-                            child: TextField(
-                              controller: _breakController,
-                              keyboardType: TextInputType.number,
-                              decoration: const InputDecoration(
-                                labelText: 'Minutes',
-                                border: OutlineInputBorder(),
-                              ),
+                          // SizedBox(
+                          //   width: 100,
+                          //   child: TextField(
+                          //     controller: _breakController,
+                          //     keyboardType: TextInputType.number,
+                          //     decoration: const InputDecoration(
+                          //       labelText: 'Minutes',
+                          //       border: OutlineInputBorder(),
+                          //     ),
+                          //   ),
+                          // ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(vertical: 5),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(12),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(
+                                    alpha: 0.2,
+                                  ), // 0.1
+                                  blurRadius: 4, // 8
+                                  offset: const Offset(1, 2), // 0, 3
+                                ),
+                              ],
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const SizedBox(width: 5),
+                                IconButton(
+                                  onPressed: () {},
+                                  icon: const Icon(Icons.remove),
+                                  style: IconButton.styleFrom(
+                                    foregroundColor: Colors.blueGrey[400],
+                                    side: BorderSide(
+                                      color: Colors.blueGrey[50]!,
+                                      width: 1,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 15),
+                                const Text(
+                                  '5',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.blueGrey,
+                                  ),
+                                ),
+                                const SizedBox(width: 15),
+                                IconButton(
+                                  onPressed: () {},
+                                  icon: const Icon(Icons.add),
+                                  style: IconButton.styleFrom(
+                                    foregroundColor: Colors.blueGrey[400],
+                                    side: BorderSide(
+                                      color: Colors.blueGrey[50]!,
+                                      width: 1,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 5),
+                              ],
                             ),
                           ),
+                          const SizedBox(width: 12),
+                          Container(width: 1, height: 70, color: Colors.blueGrey[50]),
                           const SizedBox(width: 12),
                           ElevatedButton.icon(
                             onPressed: _isActive
@@ -633,7 +690,7 @@ class _FocusHomePageState extends State<FocusHomePage>
                               foregroundColor: Colors.black87,
                               elevation: 2,
                               padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
+                                horizontal: 15,
                                 vertical: 8,
                               ),
                               shape: RoundedRectangleBorder(
