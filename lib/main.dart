@@ -3,8 +3,17 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:flutter/services.dart';
 
 void main() {
+  SystemChrome.setSystemUIOverlayStyle(
+    SystemUiOverlayStyle(
+      statusBarColor: Colors.blueGrey[50],
+      statusBarIconBrightness: Brightness.dark,
+      statusBarBrightness: Brightness.light,
+    ),
+  );
+
   runApp(const FocusSessionApp());
 }
 
@@ -325,18 +334,22 @@ class _FocusHomePageState extends State<FocusHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        toolbarHeight: 150,
-        backgroundColor: Colors.blueGrey[50],
-        flexibleSpace: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Align(
-              alignment: Alignment.topLeft,
-              child: Padding(
-                padding: const EdgeInsets.only(top: 10),
+      // appBar: AppBar(
+      //   toolbarHeight: 0,
+      //   backgroundColor: Colors.blueGrey[50],
+      // ),
+
+      body: SizedBox.expand(
+        child: Stack(
+          children: [
+            // Header
+            Container(
+              height: 200,
+              width: double.infinity,
+              color: Colors.blueGrey[50],
+              padding: const EdgeInsets.only(top: 20, left: 16, right: 16),
+              child: SafeArea(
                 child: Column(
-                  mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
@@ -356,91 +369,113 @@ class _FocusHomePageState extends State<FocusHomePage> {
                 ),
               ),
             ),
-          ),
-        ),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            _buildTimerCircle(),
-            const SizedBox(height: 16),
-            _buildTimerControls(),
-            const SizedBox(height: 24),
-            const Text(
-              'Start A Session',
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 12,
-              runSpacing: 12,
-              alignment: WrapAlignment.center,
-              children: [
-                _sessionButton('5 Min', 5),
-                _sessionButton('15 Min', 15),
-                _sessionButton('30 Min', 30),
-                _sessionButton('1 Hour', 60),
-                _sessionButton('2 Hours', 120),
-              ],
-            ),
-            const SizedBox(height: 28),
-            const Text(
-              'Take A Break',
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 12),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                SizedBox(
-                  width: 100,
-                  child: TextField(
-                    controller: _breakController,
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      labelText: 'Minutes',
-                      border: OutlineInputBorder(),
-                    ),
+
+            // Body
+            Positioned(
+              top: 150, // 200 - 50
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: Container(
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+                ),
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      _buildTimerCircle(),
+                      const SizedBox(height: 16),
+                      _buildTimerControls(),
+                      const SizedBox(height: 24),
+                      const Text(
+                        'Start A Session',
+                        style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Wrap(
+                        spacing: 12,
+                        runSpacing: 12,
+                        alignment: WrapAlignment.center,
+                        children: [
+                          _sessionButton('5 Min', 5),
+                          _sessionButton('15 Min', 15),
+                          _sessionButton('30 Min', 30),
+                          _sessionButton('1 Hour', 60),
+                          _sessionButton('2 Hours', 120),
+                        ],
+                      ),
+                      const SizedBox(height: 28),
+                      const Text(
+                        'Take A Break',
+                        style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          SizedBox(
+                            width: 100,
+                            child: TextField(
+                              controller: _breakController,
+                              keyboardType: TextInputType.number,
+                              decoration: const InputDecoration(
+                                labelText: 'Minutes',
+                                border: OutlineInputBorder(),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          ElevatedButton.icon(
+                            onPressed: _isActive
+                                ? null
+                                : () {
+                                    final mins =
+                                        int.tryParse(_breakController.text) ??
+                                        5;
+                                    _startSession(mins, isBreak: true);
+                                  },
+                            icon: const Icon(Icons.coffee),
+                            label: const Text('Start Break'),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 28),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _statCard(
+                              context,
+                              icon: Icons.timer_outlined,
+                              label: 'Total Focus Time',
+                              value: _formatTime(_totalFocusSecondsToday),
+                              color: Colors.blueAccent,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: _statCard(
+                              context,
+                              icon: Icons.schedule_outlined,
+                              label: 'Time Left In Day',
+                              value: _formatTime(_secondsLeftInDay),
+                              color: Colors.green,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(width: 12),
-                ElevatedButton.icon(
-                  onPressed: _isActive
-                      ? null
-                      : () {
-                          final mins = int.tryParse(_breakController.text) ?? 5;
-                          _startSession(mins, isBreak: true);
-                        },
-                  icon: const Icon(Icons.coffee),
-                  label: const Text('Start Break'),
-                ),
-              ],
-            ),
-            const SizedBox(height: 28),
-            Row(
-              children: [
-                Expanded(
-                  child: _statCard(
-                    context,
-                    icon: Icons.timer_outlined,
-                    label: 'Total Focus Time',
-                    value: _formatTime(_totalFocusSecondsToday),
-                    color: Colors.blueAccent,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: _statCard(
-                    context,
-                    icon: Icons.schedule_outlined,
-                    label: 'Time Left In Day',
-                    value: _formatTime(_secondsLeftInDay),
-                    color: Colors.green,
-                  ),
-                ),
-              ],
+              ),
             ),
           ],
         ),
