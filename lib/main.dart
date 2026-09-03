@@ -269,8 +269,8 @@ class _FocusHomePageState extends State<FocusHomePage>
       _remaining = diff;
       _isBreak = isBreak;
       _endTime = endTime;
-      _accumulatedRunSeconds = accumulated;
-      _runStartTime = null;
+      _accumulatedRunSeconds = max(0, totalDuration - diff);
+      _runStartTime = DateTime.now();
       _runId++;
     });
     _scheduleRefresh(_runId);
