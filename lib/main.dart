@@ -720,7 +720,7 @@ class _FocusHomePageState extends State<FocusHomePage>
                         children: [
                           _statCard(
                             context,
-                            icon: Icons.timelapse_outlined,
+                            icon: Icons.center_focus_strong_outlined,
                             label: 'Total Focus Time',
                             value: _formatTime(_totalFocusSecondsToday),
                             color: Colors.blue,
