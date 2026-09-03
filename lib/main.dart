@@ -660,26 +660,22 @@ class _FocusHomePageState extends State<FocusHomePage>
                         ],
                       ),
                       const SizedBox(height: 28),
-                      Row(
+                      Column(
                         children: [
-                          Expanded(
-                            child: _statCard(
-                              context,
-                              icon: Icons.timer_outlined,
-                              label: 'Total Focus Time',
-                              value: _formatTime(_totalFocusSecondsToday),
-                              color: Colors.blueAccent,
-                            ),
+                          _statCard(
+                            context,
+                            icon: Icons.timelapse_outlined,
+                            label: 'Total Focus Time',
+                            value: _formatTime(_totalFocusSecondsToday),
+                            color: Colors.blue,
                           ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: _statCard(
-                              context,
-                              icon: Icons.schedule_outlined,
-                              label: 'Time Left In Day',
-                              value: _formatTime(_secondsLeftInDay),
-                              color: Colors.green,
-                            ),
+                          const SizedBox(height: 10),
+                          _statCard(
+                            context,
+                            icon: Icons.today_outlined,
+                            label: 'Time Left In Day',
+                            value: _formatTime(_secondsLeftInDay),
+                            color: Colors.green,
                           ),
                         ],
                       ),
@@ -700,47 +696,78 @@ Widget _statCard(
   required IconData icon,
   required String label,
   required String value,
-  required Color color,
+  required MaterialColor color,
 }) {
   return Card(
     elevation: 4,
+    clipBehavior: Clip.hardEdge,
     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-    child: Container(
-      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 12),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            color.withValues(alpha: 0.12),
-            color.withValues(alpha: 0.04),
-          ],
-        ),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, color: color, size: 28),
-          const SizedBox(height: 8),
-          Text(
-            label,
-            textAlign: TextAlign.center,
-            style: Theme.of(
-              context,
-            ).textTheme.titleSmall?.copyWith(color: Colors.grey.shade700),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 26,
-              fontWeight: FontWeight.bold,
-              color: color,
+    child: Stack(
+      clipBehavior: Clip.hardEdge,
+      children: [
+        Container(
+          width: double.infinity,
+          height: 117,
+          padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 12),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                color.withValues(alpha: 0.12),
+                color.withValues(alpha: 0.04),
+              ],
             ),
           ),
-        ],
-      ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: color[100],
+                      borderRadius: BorderRadius.circular(40),
+                    ),
+                    child: Icon(icon, color: color[500], size: 35),
+                  ),
+                  const SizedBox(width: 8),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        label,
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          color: Colors.grey.shade700,
+                        ),
+                      ),
+                      Text(
+                        value,
+                        style: TextStyle(
+                          fontSize: 26,
+                          fontWeight: FontWeight.bold,
+                          color: color,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+
+              Divider(height: 20, thickness: 1, color: color[200]),
+            ],
+          ),
+        ),
+
+        // Decorative water icon
+        Positioned(
+          right: -25,
+          bottom: -25,
+          child: Icon(icon, size: 100, color: color.withValues(alpha: 0.08)),
+        ),
+      ],
     ),
   );
 }
