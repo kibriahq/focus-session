@@ -46,6 +46,13 @@ class _FocusHomePageState extends State<FocusHomePage>
   static const String _storageKey = 'focus_total_seconds';
   static const String _dateKey = 'focus_date';
 
+  static const String _timerPhaseKey = 'timer_phase';
+  static const String _timerEndTimeKey = 'timer_end_time';
+  static const String _timerTotalDurationKey = 'timer_total_duration';
+  static const String _timerIsBreakKey = 'timer_is_break';
+  static const String _timerRemainingKey = 'timer_remaining';
+  static const String _timerAccumulatedKey = 'timer_accumulated';
+
   TimerPhase _phase = TimerPhase.idle;
   int _totalDuration = 0;
   int _remaining = 0;
@@ -121,7 +128,7 @@ class _FocusHomePageState extends State<FocusHomePage>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _loadFocusTime();
+    _loadFocusTime().then((_) => _restoreTimer());
     Future.delayed(Duration.zero, _updateTimeLeftInDay);
   }
 
@@ -178,6 +185,97 @@ class _FocusHomePageState extends State<FocusHomePage>
     setState(() {});
   }
 
+  Future<void> _clearPersistedTimer() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_timerPhaseKey);
+    await prefs.remove(_timerEndTimeKey);
+    await prefs.remove(_timerTotalDurationKey);
+    await prefs.remove(_timerIsBreakKey);
+    await prefs.remove(_timerRemainingKey);
+    await prefs.remove(_timerAccumulatedKey);
+  }
+
+  Future<void> _persistTimer() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (_phase == TimerPhase.idle) {
+      await _clearPersistedTimer();
+      return;
+    }
+    await prefs.setString(_timerPhaseKey, _phase.name);
+    if (_endTime != null) {
+      await prefs.setString(_timerEndTimeKey, _endTime!.toIso8601String());
+    } else {
+      await prefs.remove(_timerEndTimeKey);
+    }
+    await prefs.setInt(_timerTotalDurationKey, _totalDuration);
+    await prefs.setBool(_timerIsBreakKey, _isBreak);
+    await prefs.setInt(_timerRemainingKey, _remaining);
+    await prefs.setInt(_timerAccumulatedKey, _accumulatedRunSeconds);
+  }
+
+  Future<void> _restoreTimer() async {
+    final prefs = await SharedPreferences.getInstance();
+    final phaseStr = prefs.getString(_timerPhaseKey);
+    if (phaseStr == null || phaseStr == TimerPhase.idle.name) {
+      await _clearPersistedTimer();
+      return;
+    }
+
+    final totalDuration = prefs.getInt(_timerTotalDurationKey) ?? 0;
+    final isBreak = prefs.getBool(_timerIsBreakKey) ?? false;
+    final remaining = prefs.getInt(_timerRemainingKey) ?? 0;
+    final accumulated = prefs.getInt(_timerAccumulatedKey) ?? 0;
+    final endTimeStr = prefs.getString(_timerEndTimeKey);
+
+    if (phaseStr == TimerPhase.paused.name) {
+      setState(() {
+        _phase = TimerPhase.paused;
+        _totalDuration = totalDuration;
+        _remaining = remaining;
+        _isBreak = isBreak;
+        _accumulatedRunSeconds = accumulated;
+        _endTime = null;
+        _runStartTime = null;
+        _runId++;
+      });
+      return;
+    }
+
+    if (endTimeStr == null) {
+      await _clearPersistedTimer();
+      return;
+    }
+
+    final endTime = DateTime.tryParse(endTimeStr);
+    if (endTime == null) {
+      await _clearPersistedTimer();
+      return;
+    }
+
+    final now = DateTime.now();
+    final diff = endTime.difference(now).inSeconds;
+
+    if (diff <= 0) {
+      if (!isBreak && totalDuration > 0) {
+        await _addFocusSeconds(totalDuration);
+      }
+      await _clearPersistedTimer();
+      return;
+    }
+
+    setState(() {
+      _phase = TimerPhase.running;
+      _totalDuration = totalDuration;
+      _remaining = diff;
+      _isBreak = isBreak;
+      _endTime = endTime;
+      _accumulatedRunSeconds = accumulated;
+      _runStartTime = null;
+      _runId++;
+    });
+    _scheduleRefresh(_runId);
+  }
+
   void _scheduleRefresh(int runId) {
     Future.delayed(const Duration(seconds: 1), () {
       if (!mounted || runId != _runId) return;
@@ -216,6 +314,7 @@ class _FocusHomePageState extends State<FocusHomePage>
           _endTime = _endTime!.add(Duration(seconds: addSeconds));
         }
       });
+      _persistTimer();
       return;
     }
     _runId++;
@@ -231,6 +330,7 @@ class _FocusHomePageState extends State<FocusHomePage>
       _completing = false;
     });
     _scheduleRefresh(runId);
+    _persistTimer();
   }
 
   void _pause() {
@@ -252,6 +352,7 @@ class _FocusHomePageState extends State<FocusHomePage>
         _runStartTime = null;
       }
     });
+    _persistTimer();
   }
 
   void _resume() {
@@ -264,6 +365,7 @@ class _FocusHomePageState extends State<FocusHomePage>
       _endTime = _runStartTime!.add(Duration(seconds: _remaining));
     });
     _scheduleRefresh(runId);
+    _persistTimer();
   }
 
   void _stop() {
@@ -289,6 +391,7 @@ class _FocusHomePageState extends State<FocusHomePage>
       _accumulatedRunSeconds = 0;
       _runStartTime = null;
     });
+    _clearPersistedTimer();
   }
 
   void _completeSession() {
@@ -315,6 +418,7 @@ class _FocusHomePageState extends State<FocusHomePage>
       _accumulatedRunSeconds = 0;
       _runStartTime = null;
     });
+    _clearPersistedTimer();
     _playCompletionSound();
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -545,7 +649,7 @@ class _FocusHomePageState extends State<FocusHomePage>
                                 child: _sessionButton(
                                   '15 Min',
                                   15,
-                                  Colors.orange,
+                                  Colors.purple,
                                 ),
                               ),
                               const SizedBox(width: 12),
@@ -573,7 +677,7 @@ class _FocusHomePageState extends State<FocusHomePage>
                                 child: _sessionButton(
                                   '2 Hrs',
                                   120,
-                                  Colors.purple,
+                                  Colors.orange,
                                 ),
                               ),
                               const SizedBox(width: 12),
@@ -720,7 +824,7 @@ class _FocusHomePageState extends State<FocusHomePage>
                         children: [
                           _statCard(
                             context,
-                            icon: Icons.center_focus_strong_outlined,
+                            icon: Icons.eco_outlined,
                             label: 'Total Focus Time',
                             value: _formatTime(_totalFocusSecondsToday),
                             color: Colors.blue,
