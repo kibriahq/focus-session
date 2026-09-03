@@ -784,7 +784,7 @@ class _FocusHomePageState extends State<FocusHomePage>
                           const SizedBox(width: 12),
                           ElevatedButton.icon(
                             onPressed: _isActive
-                                ? null
+                                ? () {}
                                 : () {
                                     _startSession(_breakMinutes, isBreak: true);
                                   },
