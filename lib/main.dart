@@ -507,8 +507,36 @@ class _FocusHomePageState extends State<FocusHomePage> {
                                         5;
                                     _startSession(mins, isBreak: true);
                                   },
-                            icon: const Icon(Icons.coffee),
-                            label: const Text('Start Break'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.white,
+                              foregroundColor: Colors.black87,
+                              elevation: 2,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 8,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                            icon: Container(
+                              padding: const EdgeInsets.all(6),
+                              decoration: BoxDecoration(
+                                color: Colors.green[50],
+                                borderRadius: BorderRadius.circular(40),
+                              ),
+                              child: Icon(
+                                Icons.coffee_outlined,
+                                color: Colors.green[500],
+                                size: 30,
+                              ),
+                            ),
+                            label: Text(
+                              'Start Break',
+                              style: TextStyle(
+                                color: Colors.green[700]
+                              ),
+                            ),
                           ),
                         ],
                       ),
