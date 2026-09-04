@@ -545,22 +545,29 @@ class _FocusHomePageState extends State<FocusHomePage>
         backgroundColor: Colors.white,
         foregroundColor: Colors.black87,
         elevation: 2,
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
       child: Row(
-        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-            padding: const EdgeInsets.all(6),
+            padding: const EdgeInsets.all(5),
             decoration: BoxDecoration(
               color: color[50],
               borderRadius: BorderRadius.circular(40),
             ),
             child: Icon(Icons.timer_outlined, color: color[500], size: 18),
           ),
-          const SizedBox(width: 8),
-          Text(label, style: const TextStyle(color: Colors.blueGrey)),
+          const SizedBox(width: 6),
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(color: Colors.blueGrey, fontSize: 14),
+            ),
+          ),
         ],
       ),
     );
